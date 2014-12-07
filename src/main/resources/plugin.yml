@@ -1,0 +1,6 @@
+name: ${name}
+main: io.github.secretdataz.StrictWGUseFlag.StrictWGUseFlag
+version: ${version}
+description: Makes WorldGuard's USE flag more strict.
+author: iSuzutsuki
+depend: [WorldGuard]
