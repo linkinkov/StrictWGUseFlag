@@ -29,6 +29,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 
@@ -40,25 +41,44 @@ public WorldGuardPlugin wg;
 	public BlockListener(StrictWGUseFlag instance) {
 		plugin = instance;
 	}
-	
-	@EventHandler(priority = EventPriority.HIGH)
+
+    private boolean isAllowed(LocalPlayer player, Location loc)
+    {
+        World world = loc.getWorld();
+        RegionManager rm = wg.getRegionManager(world);
+        ApplicableRegionSet ars = rm.getApplicableRegions(loc);
+        if(!ars.allows(DefaultFlag.USE,player) && !wg.getGlobalRegionManager().hasBypass(player,world)) {
+            if(!ars.canBuild(player)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    @EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract (PlayerInteractEvent event)
 	{
         if(!event.hasBlock())return;
         Block clicked = event.getClickedBlock();
-        World world = clicked.getWorld();
+        if(plugin.isExempted(clicked.getTypeId()))return;
         LocalPlayer localPlayer = wg.wrapPlayer(event.getPlayer());
         Location loc = clicked.getLocation();
-        RegionManager rm = wg.getRegionManager(world);
-        ApplicableRegionSet ars = rm.getApplicableRegions(loc);
-        if(plugin.isExempted(clicked.getTypeId()))return;
-        if(!ars.allows(DefaultFlag.USE,localPlayer) && !wg.getGlobalRegionManager().hasBypass(localPlayer,world)) {
-            if(!ars.canBuild(localPlayer)) {
-                event.setCancelled(true);
-                event.setUseInteractedBlock(Event.Result.DENY);
-            }
-		}
+        boolean allowed = isAllowed(localPlayer, loc);
+        if(!allowed){
+            event.setCancelled(true);
+            event.setUseInteractedBlock(Event.Result.DENY);
+        }
 	}
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event)
+    {
+        Location loc = event.getRightClicked().getLocation();
+        LocalPlayer localPlayer = wg.wrapPlayer(event.getPlayer());
+        boolean allowed = isAllowed(localPlayer, loc);
+        if(!allowed) {
+            event.setCancelled(true);
+        }
+    }
 	
 
 	
