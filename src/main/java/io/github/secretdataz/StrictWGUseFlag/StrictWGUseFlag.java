@@ -75,6 +75,7 @@ public class StrictWGUseFlag extends JavaPlugin {
 		config.addDefault("msg", "&4You don't have permission for this area.");
 		config.options().copyDefaults(true);
 		config.save(cfgFile);
+        config = YamlConfiguration.loadConfiguration(cfgFile); // TODO : Better solution?
         exempted = config.getIntegerList("exemptedList");
         msg = config.getString("msg");
         msg = msg.replaceAll("&([0-9a-f])", "\u00A7$1");
